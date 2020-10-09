@@ -1,3 +1,7 @@
 # Goal Scheduler
 
-I have too many things I want to do and I'm too indecisive. So instead of wasting my time, thinking about my priorties, I made this to run code and it will create a schedule for me.
+This project uses React framework with Material UI.
+
+There's a lot more to do and that this can be improved on. That is I need to make backend and deploy it. 
+
+I'll save that for when the app schedules me in next.
