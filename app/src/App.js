@@ -10,7 +10,7 @@ import {
     CssBaseline,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles'
-import { GoalCreationDialogForm, GoalCreationForm, GoalListViewer } from './components/Goal';
+import { GoalCreationDialogForm, GoalListViewer } from './components/Goal';
 import CustomizedTimeline from './components/Schedule';
 import { GoalSelector, createGoal } from './api/GoalAPI';
 
@@ -50,10 +50,12 @@ function App() {
     const classes = useStyles();
     const [state, setState] = React.useState({
         list: JSON.parse(localStorage.getItem('goalListStorage')) || [],
+        key: "",
         title: "",
         weight: 6,
         showList: false,
         openCreation: false,
+        isEditing: false,
         schedule: []
     });
 
@@ -91,10 +93,20 @@ function App() {
             event.preventDefault();
             return;
         }
-        var goal = createGoal(state.title, state.weight);
-        const updatedList = state.list.concat(goal);
-        console.log(goal);
-        setState({ ...state, list: updatedList, title: "", weight: 6, openCreation: false });
+        var goal = null;
+        var updatedList = null;
+        if (state.isEditing) {
+            goal = {title: state.title, weight: state.weight, key: state.key}
+            updatedList = state.list.map((item) => {
+                if (item.key === state.key) {return goal}
+                return item
+            });
+        }
+        else {
+            goal = createGoal(state.title, state.weight);
+            updatedList = state.list.concat(goal);
+        }
+        setState({ ...state, list: updatedList, title: "", weight: 6, openCreation: false, isEditing: false, key: ""});
         localStorage.setItem('goalListStorage', JSON.stringify(updatedList));
     };
 
@@ -117,6 +129,11 @@ function App() {
         localStorage.setItem('goalListStorage', JSON.stringify(updatedList));
     }
 
+    function editGoalClick(key) {
+        const goal = state.list.find((item) => item.key == key);
+        setState({...state, openCreation: true, isEditing: true, title: goal.title, weight: goal.weight, key: goal.key})
+    }
+
     return (
         <div className="App">
             <CssBaseline />
@@ -130,7 +147,7 @@ function App() {
             <Drawer variant="permanent" className={classes.drawer} classes={{ paper: classes.drawerPaper }}>
                 <Toolbar />
                 <div className={classes.drawerContainer}>
-                    <GoalListViewer list={state.list} onDelete={deleteGoalClick} childClassName={classes.item} />
+                    <GoalListViewer list={state.list} onDelete={deleteGoalClick} onEdit={editGoalClick} childClassName={classes.item} />
                 </div>
                 <Button color="primary" variant="contained" onClick={handleClickOpen}>Create Task</Button>
                 <Button color="primary" variant="outlined" onClick={handleShowListClick}>Make Schedule</Button>

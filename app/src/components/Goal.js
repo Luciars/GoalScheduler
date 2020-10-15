@@ -7,12 +7,9 @@ import {
     Slider, 
     Fab, 
     Typography, 
-    Paper,
-    Grid,
     Card,
     CardActions,
     CardContent,
-    Container,
     LinearProgress,
     Dialog,
     List,
@@ -51,7 +48,7 @@ function GoalListCard(props) {
                 <LinearProgress variant="determinate" value={68} />
             </CardContent>
             <CardActions className={classes.buttons}>
-                <Fab color="primary" aria-label="edit" size="small" variant="extended">
+                <Fab color="primary" aria-label="edit" size="small" variant="extended" onClick={()=> props.onEdit(props.elem.key)}>
                     Edit <EditIcon />
                 </Fab>
                 <Fab color="secondary" aria-label="delete" size="small" variant="extended" onClick={() => props.onDelete(props.elem.key)}>
@@ -119,7 +116,7 @@ function GoalListViewer(props) {
             {props.list.map(elem => {
                 return(
                     <ListItem>
-                        <GoalListCard className={props.childClassName} key={elem.key} elem={elem} onDelete={props.onDelete} />
+                        <GoalListCard className={props.childClassName} key={elem.key} elem={elem} onDelete={props.onDelete} onEdit={props.onEdit}/>
                     </ListItem>
                 );
             })}
