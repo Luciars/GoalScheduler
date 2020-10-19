@@ -21,6 +21,7 @@ import {
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { makeStyles } from '@material-ui/core/styles';
+import { GoalSelector, createGoal } from '../api/GoalAPI';
 
 const useCardStyles = makeStyles({
     root: {
@@ -45,7 +46,9 @@ function GoalListCard(props) {
                 <Typography variant="h6" component="h6" className={classes.title} align="left">
                     {props.elem.title}
                 </Typography>
-                <LinearProgress variant="determinate" value={68} />
+                <Typography variant="p">
+                    {props.elem.description}
+                </Typography>
             </CardContent>
             <CardActions className={classes.buttons}>
                 <Fab color="primary" aria-label="edit" size="small" variant="extended" onClick={()=> props.onEdit(props.elem.key)}>
@@ -93,6 +96,15 @@ function GoalCreationForm(props) {
                 value={props.title}
                 onChange={props.onChange}
             />
+            <br/>
+            <TextField
+                id="standard-basic"
+                label="Description"
+                name="description"
+                type="text"
+                value={props.description}
+                onChange={props.onChange}
+            />
             <br />
             <Slider
                 name="weight"
@@ -124,7 +136,109 @@ function GoalListViewer(props) {
     );
 }
 
+function GoalApp(props) {
+    const [state, setState] = React.useState({
+        list: JSON.parse(localStorage.getItem('goalListStorage')) || [],
+        key: "",
+        title: "",
+        description: "",
+        weight: 6,
+        showList: false,
+        openCreation: false,
+        isEditing: false,
+        schedule: []
+    });
+
+    function handleChange(event, newValue) {
+        setState({
+            ...state,
+            [event.target.name]: event.target.value
+        });
+    }
+
+    function handleSliderChange(event, newValue) {
+        setState({
+            ...state,
+            weight: newValue
+        })
+    }
+
+    function handleClickOpen() {
+        setState({
+            ...state,
+            openCreation: true
+        })
+    }
+
+    function handleClickClose() {
+        setState({
+            ...state,
+            openCreation: false
+        })
+    }
+
+    function handleGoalCreationClick(event) {
+        event.preventDefault();
+        if (state.title === "") {
+            event.preventDefault();
+            return;
+        }
+        var goal = null;
+        var updatedList = null;
+        if (state.isEditing) {
+            goal = {title: state.title, weight: state.weight, key: state.key, description: state.description}
+            updatedList = state.list.map((item) => {
+                if (item.key === state.key) {return goal}
+                return item
+            });
+        }
+        else {
+            goal = createGoal(state.title, state.weight, state.description);
+            updatedList = state.list.concat(goal);
+        }
+        setState({ ...state, list: updatedList, title: "", weight: 6, openCreation: false, isEditing: false, key: "", description: ""});
+        localStorage.setItem('goalListStorage', JSON.stringify(updatedList));
+        props.onUpdate(state.list)
+    };
+
+    function handleShowListClick(event) {
+        if (state.list.length <= 0) {
+            event.preventDefault();
+            return;
+        }
+        const GoalChooser = new GoalSelector(state.list);
+        let schedule = []
+        for (let i = 0; i < 10; i++) {
+            schedule.push({ ...GoalChooser.getRandomTask(), startHour: 9+i, endHour: 10+i})
+        }
+        setState({ ...state, showList: true, schedule: schedule });
+    }
+
+    function deleteGoalClick(key) {
+        const updatedList = state.list.filter((item) => item.key !== key);
+        setState({ ...state, list: updatedList });
+        localStorage.setItem('goalListStorage', JSON.stringify(updatedList));
+        props.onUpdate(state.list)
+    }
+
+    function editGoalClick(key) {
+        const goal = state.list.find((item) => item.key == key);
+        setState({...state, openCreation: true, isEditing: true, title: goal.title, weight: goal.weight, key: goal.key, description: goal.description})
+        props.onUpdate(state.list)
+    }
+
+    return(
+        <div className="GoalApp">
+            <Button color="primary" variant="contained" onClick={handleClickOpen}>Create Task</Button>
+            <GoalListViewer list={state.list} onDelete={deleteGoalClick} onEdit={editGoalClick} />
+
+            <GoalCreationDialogForm open={state.openCreation} onClose={handleClickClose} title={state.title} weight={state.weight} description={state.description} onSliderChange={handleSliderChange} onChange={handleChange} onClick={handleGoalCreationClick} />
+        </div>
+    );
+}
+
 export {
+    GoalApp,
     GoalCreationForm,
     GoalCreationDialogForm,
     GoalListViewer

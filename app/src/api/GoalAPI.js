@@ -31,9 +31,9 @@ class GoalSelector {
     }
 }
 
-function createGoal(title, weight) {
+function createGoal(title, weight, description) {
     var id = uuidv4();
-    return({key: id, title: title, weight: weight - 1});
+    return({key: id, title: title, weight: weight - 1, description: description});
 }
 
 // TODO: Eventually I'm gonna have to do this
